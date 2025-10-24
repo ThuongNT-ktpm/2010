@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Hộp quà mở nắp</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #fae1dd;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        overflow: hidden;
+        transition: opacity 0.3s ease;
+        touch-action: manipulation;
+      }
+
+      body.fade-out {
+        opacity: 0;
+      }
+
+      .click-area {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        cursor: pointer;
+        background: transparent;
+        touch-action: manipulation;
+      }
+
+      .gift-wrapper {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        width: 100%;
+        max-width: 360px;
+        padding: 8px;
+        margin-top: clamp(10vh, 15vw, 100px);
+        z-index: 1;
+      }
+
+      .gift-container {
+        position: relative;
+        perspective: 1200px;
+        animation: gentleShake 1.5s ease-in-out infinite;
+        user-select: none;
+        width: 100%;
+        max-width: 280px;
+      }
+
+      .open .gift-container {
+        animation: none;
+      }
+
+      @keyframes gentleShake {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-4px);
+        }
+      }
+
+      :root {
+        --hop-width: min(60vw, 240px);
+        --hop-height: min(42vw, 160px);
+        --nap-width: min(68vw, 270px);
+        --nap-height: min(26vw, 100px);
+      }
+
+      /* ----- hộp quà kiểu vẽ, pastel, nơ to ----- */
+      .gift-container {
+        position: relative;
+        width: min(320px, 60vw);
+        max-width: 360px;
+        height: min(220px, 40vh);
+        display: block;
+        margin: 0 auto;
+        pointer-events: none;
+      }
+      .gift-container * {
+        pointer-events: auto;
+      }
+
+      /* bóng dưới hộp */
+      .gift-shadow {
+        position: absolute;
+        left: 50%;
+        bottom: -6px;
+        transform: translateX(-50%);
+        width: 60%;
+        height: 22px;
+        background: radial-gradient(
+          closest-side,
+          rgba(0, 0, 0, 0.15),
+          rgba(0, 0, 0, 0.05)
+        );
+        border-radius: 50%;
+        filter: blur(4px);
+        z-index: 0;
+      }
+
+      /* thân hộp (màu trắng nhẹ, cạnh hồng nhạt) */
+      .gift-body {
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        transform: translateX(-50%);
+        width: var(--hop-width);
+        height: calc(var(--hop-height) - 10px);
+        background: linear-gradient(180deg, #ffffff 0%, #fff9fb 60%);
+        border-radius: 6px;
+        box-shadow: 0 18px 30px rgba(0, 0, 0, 0.12),
+          inset 0 2px 8px rgba(0, 0, 0, 0.03);
+        border: 1px solid rgba(240, 110, 150, 0.06);
+        z-index: 2;
+        overflow: visible;
+      }
+
+      /* ruy băng dọc ngang (mỏng, mềm) */
+      .ribbon-vertical,
+      .ribbon-horizontal {
+        position: absolute;
+        background: linear-gradient(180deg, #f6a5b3, #ff8fa3);
+        box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.5);
+      }
+      .ribbon-vertical {
+        left: 50%;
+        top: 0;
+        transform: translateX(-50%);
+        width: calc(var(--hop-width) * 0.18);
+        height: 100%;
+        border-radius: 3px;
+        z-index: 3;
+      }
+      .ribbon-horizontal {
+        left: 0;
+        top: 46%;
+        width: 100%;
+        height: calc(var(--hop-height) * 0.12);
+        border-radius: 3px;
+        z-index: 3;
+      }
+
+      /* nắp hộp: hơi to hơn thân, có bóng, nằm phía trên */
+      .gift-lid {
+        position: absolute;
+        left: 50%;
+        bottom: calc(var(--hop-height) - min(3vw, 12px));
+        transform: translateX(-50%) translateY(0);
+        width: var(--nap-width);
+        height: var(--nap-height);
+        background: linear-gradient(180deg, #ffdce6, #ffb6c1);
+        border-radius: 8px;
+        box-shadow: 0 12px 22px rgba(0, 0, 0, 0.12),
+          inset 0 3px 8px rgba(255, 255, 255, 0.6);
+        z-index: 5;
+        transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1),
+          opacity 0.25s;
+        transform-origin: center bottom;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 8px;
+      }
+
+      /* khi mở: nắp xoay lên */
+      .open .gift-lid {
+        transform: translateX(-50%) translateY(-40px) rotateX(-18deg)
+          translateZ(0);
+        opacity: 0;
+      }
+
+      /* nơ to, mềm, dạng 2 vòng + knots + 2 đuôi */
+      .bow {
+        position: relative;
+        width: 140px;
+        height: 60px;
+        transform: translateY(-6px);
+      }
+      .bow-loop {
+        position: absolute;
+        width: 68px;
+        height: 44px;
+        background: linear-gradient(180deg, #ff9fb0, #ff6f8b);
+        border-radius: 50% 50% 40% 40%;
+        box-shadow: inset 0 4px 10px rgba(255, 255, 255, 0.35);
+      }
+      .bow-loop.left {
+        left: 2px;
+        top: 6px;
+        transform: rotate(-18deg);
+      }
+      .bow-loop.right {
+        right: 2px;
+        top: 6px;
+        transform: rotate(18deg);
+      }
+      .bow-knot {
+        position: absolute;
+        left: 50%;
+        top: 18px;
+        transform: translateX(-50%);
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: linear-gradient(180deg, #ff7c91, #ff4d74);
+        box-shadow: inset 0 3px 6px rgba(255, 255, 255, 0.3);
+        z-index: 6;
+      }
+      /* đuôi nơ quăn */
+      .bow-tail {
+        position: absolute;
+        width: 26px;
+        height: 54px;
+        background: linear-gradient(180deg, #ff7c91, #ff4d74);
+        border-radius: 6px;
+        top: 28px;
+        z-index: 4;
+      }
+      .bow-tail.left {
+        left: 22px;
+        transform: rotate(-18deg) translateY(6px);
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 4px;
+      }
+      .bow-tail.right {
+        right: 22px;
+        transform: rotate(18deg) translateY(6px);
+        border-bottom-right-radius: 12px;
+        border-bottom-left-radius: 4px;
+      }
+
+      /* hearts layer (sẽ chứa các trái tim bay) */
+      .heart-layer {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 8;
+      }
+
+      /* trái tim style */
+      .heart {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        transform: rotate(-45deg) scale(0.9);
+        background: linear-gradient(180deg, #ff6f8b, #ff9fb0);
+        border-radius: 50% 50% 0 0;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12),
+          inset 0 2px 6px rgba(255, 255, 255, 0.35);
+        opacity: 0;
+      }
+
+      /* tạo hình trái tim bằng pseudo (sử dụng ::before ::after) */
+      .heart::before,
+      .heart::after {
+        content: "";
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: inherit;
+        border-radius: 50%;
+        top: -10px;
+        left: 0;
+      }
+      .heart::after {
+        left: 10px;
+        top: 0;
+      }
+
+      /* animation trái tim bay */
+      @keyframes flyUp {
+        0% {
+          transform: translateY(0) rotate(-45deg) scale(0.9);
+          opacity: 1;
+        }
+        70% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-160px) translateX(20px) rotate(-45deg)
+            scale(1.1);
+          opacity: 0;
+        }
+      }
+
+      /* responsive adjust */
+      @media (max-width: 480px) {
+        .bow {
+          width: 100px;
+          height: 48px;
+        }
+        .bow-loop {
+          width: 54px;
+          height: 36px;
+        }
+        .gift-container {
+          width: min(260px, 70vw);
+          height: min(200px, 36vh);
+        }
+      }
+      .sparkle {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: radial-gradient(circle, #fff 30%, #ffd700 70%, transparent);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 3;
+        animation: sparkleBurst 0.5s ease-out forwards;
+      }
+
+      @keyframes sparkleBurst {
+        0% {
+          opacity: 1;
+          transform: translate(0, 0) scale(1) rotate(0deg);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(calc(var(--dx) * 1px), calc(var(--dy) * 1px))
+            scale(0.2) rotate(360deg);
+        }
+      }
+
+      .hint-text {
+        margin-top: clamp(12px, 4vw, 20px); /* Chữ ngay dưới hộp quà */
+        font-size: clamp(0.75rem, 4vw, 0.95rem); /* Tối ưu cho điện thoại */
+        font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+        color: #d6336c;
+        text-align: center;
+        font-weight: 600;
+        animation: blink 1.5s infinite;
+        user-select: none;
+        line-height: 1.3;
+        padding: 0 8px;
+        z-index: 1;
+      }
+
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+
+      /* Tối ưu cho điện thoại dọc */
+      @media (max-width: 480px) {
+        .gift-wrapper {
+          max-width: 320px;
+          margin-top: clamp(8vh, 12vw, 80px);
+          padding: 6px;
+        }
+
+        .gift-container {
+          max-width: 260px;
+        }
+
+        :root {
+          --hop-width: min(65vw, 220px);
+          --hop-height: min(45vw, 150px);
+          --nap-width: min(72vw, 250px);
+          --nap-height: min(28vw, 95px);
+        }
+
+        .hint-text {
+          font-size: clamp(0.7rem, 4.5vw, 0.9rem);
+          margin-top: clamp(10px, 3.5vw, 18px);
+          padding: 0 12px;
+        }
+      }
+
+      /* Tối ưu cho màn hình rất nhỏ */
+      @media (max-height: 500px) or (max-width: 360px) {
+        .gift-wrapper {
+          max-width: 280px;
+          margin-top: clamp(6vh, 10vw, 60px);
+          padding: 4px;
+        }
+
+        .gift-container {
+          max-width: 240px;
+        }
+
+        :root {
+          --hop-width: min(70vw, 200px);
+          --hop-height: min(48vw, 140px);
+          --nap-width: min(78vw, 230px);
+          --nap-height: min(30vw, 85px);
+        }
+
+        .hint-text {
+          font-size: clamp(0.65rem, 5vw, 0.85rem);
+          margin-top: clamp(8px, 3vw, 15px);
+          line-height: 1.2;
+        }
+      }
+
+      @media (orientation: landscape) {
+        body {
+          flex-direction: row;
+          justify-content: center;
+          align-items: center;
+          gap: 15px;
+        }
+
+        .gift-wrapper {
+          max-width: 45vw;
+          margin-top: 0;
+          margin-right: 8px;
+          padding: 6px;
+        }
+
+        .hint-text {
+          margin-top: 0;
+          max-width: 45vw;
+          font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+          writing-mode: vertical-rl;
+          text-orientation: mixed;
+        }
+      }
+
+      /* Tối ưu cho máy tính */
+      @media (min-width: 768px) {
+        .gift-wrapper {
+          max-width: 400px;
+          margin-top: clamp(12vh, 20vw, 120px);
+        }
+
+        .gift-container {
+          max-width: 300px;
+        }
+
+        .hint-text {
+          font-size: clamp(1rem, 1.5vw, 1.2rem);
+          margin-top: clamp(15px, 2vh, 25px);
+          writing-mode: horizontal-tb; /* Chữ ngang trên máy tính */
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="click-area" id="giftClickArea"></div>
+
+    <div class="gift-container" id="giftContainer">
+      <div class="gift-shadow"></div>
+
+      <!-- Nắp (lid) -->
+      <div class="gift-lid" id="giftLid">
+        <div class="bow">
+          <span class="bow-loop left"></span>
+          <span class="bow-knot"></span>
+          <span class="bow-loop right"></span>
+          <span class="bow-tail left"></span>
+          <span class="bow-tail right"></span>
+        </div>
+      </div>
+
+      <!-- Thân hộp -->
+      <div class="gift-body" id="giftBody">
+        <div class="ribbon-vertical"></div>
+        <div class="ribbon-horizontal"></div>
+      </div>
+
+      <!-- container cho trái tim bật ra -->
+      <div class="heart-layer" id="heartLayer" aria-hidden="true"></div>
+    </div>
+
+    <script>
+      const clickArea = document.getElementById("giftClickArea");
+      const container = document.querySelector(".gift-container");
+      const body = document.body;
+      let isAnimating = false;
+
+      document.addEventListener("DOMContentLoaded", () => {
+        document.body.style.touchAction = "manipulation";
+      });
+
+      clickArea.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        if (isAnimating) return;
+        isAnimating = true;
+
+        const isOpen = container.classList.contains("open");
+        if (!isOpen) {
+          openGift();
+        }
+      });
+
+      function openGift() {
+        container.classList.add("open");
+        createSparkles();
+
+        setTimeout(() => {
+          body.classList.add("fade-out");
+          setTimeout(() => {
+            goToLetterPage();
+          }, 250);
+        }, 700);
+      }
+
+      function goToLetterPage() {
+        try {
+          window.location.href = "thu.html";
+        } catch (err) {
+          console.error("Lỗi chuyển trang:", err);
+          alert("Không thể chuyển đến trang thu.html. Hãy kiểm tra lại tệp!");
+          body.classList.remove("fade-out");
+          container.classList.remove("open");
+          isAnimating = false;
+        }
+      }
+
+      function createSparkles() {
+        const sparkleCount = window.innerWidth <= 360 ? 4 : 6;
+        for (let i = 0; i < sparkleCount; i++) {
+          const s = document.createElement("div");
+          s.className = "sparkle";
+          const dx = (Math.random() - 0.5) * 35;
+          const dy = (Math.random() - 0.5) * 35;
+          s.style.setProperty("--dx", dx);
+          s.style.setProperty("--dy", dy);
+          s.style.left = `${40 + Math.random() * 20}%`;
+          s.style.top = `${20 + Math.random() * 30}%`;
+          s.style.animationDelay = `${Math.random() * 0.05}s`;
+          container.appendChild(s);
+          setTimeout(() => s.remove(), 500);
+        }
+      }
+    </script>
+  </body>
+</html>
